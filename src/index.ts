@@ -36,9 +36,13 @@ app.get('/api/oauth2/exchange', async (req, res) => {
 });
 
 app.get('/api/oauth2/refresh', async (req, res) => {
-    const redirectURL = req.query['redirect-uri'];
+    let fromBrowser = req.query['redirect'] != undefined;
+    const redirectURL = req.query['redirect-url'];
     const refreshToken = req.cookies?.refresh_token;
-    if (!refreshToken) return res.redirect(config.authUrl);
+    if (!refreshToken) {
+        if (fromBrowser) return res.redirect(config.authUrl);
+        else return res.status(401);
+    };
 
     let aT = await getAccessToken(refreshToken);
 
@@ -52,9 +56,10 @@ app.get('/api/oauth2/refresh', async (req, res) => {
         secure: req.secure,
         maxAge: refreshTokenMaxAge
     });
-
-    if (redirectURL) res.redirect(redirectURL.toString());
-    else res.redirect('/success');
+    if (fromBrowser) {
+        if (redirectURL) res.redirect(redirectURL.toString());
+        else res.redirect('/success');
+    } else res.end()
 });
 
 app.get('/api/oauth2/user', async (req, res) => {
@@ -81,7 +86,7 @@ app.get('/api/oauth2/joinserver', async (req, res) => {
         let response = await addUserToGuild(accessToken, guildId.toString(), (await getUserInfo(accessToken)).id);
         res.json(response);
     } catch {
-        res.json({error: 'invalid guild id'})
+        res.json({ error: 'invalid guild id' })
         res.status(400)
     } finally {
         if (redirectURL) res.redirect(redirectURL.toString());
@@ -92,7 +97,7 @@ app.get('/api/oauth2/hasauthorized', (req, res) => {
     const refreshToken = req.cookies?.refresh_token;
     const accessToken = req.cookies?.access_token;
     if (!refreshToken) res.status(400);
-    else if (!accessToken) res.status(404);
+    else if (!accessToken) res.status(202);
     else res.status(200)
     res.end()
 });
@@ -107,6 +112,10 @@ app.get('/api/oauth2/authurlwbot', (req, res) => {
     if (req.query['redirect'] == 'true') res.redirect(config.authUrlwBot)
     else res.send(config.authUrlwBot)
     res.end()
+});
+
+app.get('/', async (req, res) => {
+    res.sendFile(path.join(__dirname, "/routes/index.html"))
 });
 
 app.get('/**', (req, res) => {
