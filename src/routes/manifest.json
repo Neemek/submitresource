@@ -1,0 +1,9 @@
+{
+    "$schema": "https://json.schemastore.org/web-manifest-combined.json",
+    "name": "Dashboard",
+    "short_name": "Dash",
+    "start_url": "/dashboard",
+    "display": "standalone",
+    "background_color": "#fff",
+    "description": "Dashboard for discord oauth."
+}
