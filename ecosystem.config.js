@@ -10,9 +10,9 @@ module.exports = {
             "user": "ubuntu",
             "host": ["DEPLOYMENT_IP_HERE"],
             "ref": "origin/master",
-            "repo": "git@github.com:Username/repository.git",
+            "repo": "git@github.com:Neemek/submitresource.git",
             "path": "/var/www/my-repository",
-            "post-deploy": "npm install"
+            "post-deploy": "npm install-n-build"
         }
 
     }
