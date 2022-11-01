@@ -1,0 +1,7 @@
+config-template.json
+README.md
+
+node_modules
+frontend
+build
+data/**
