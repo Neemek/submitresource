@@ -4,13 +4,16 @@ import config from '../../config.json'
 export const BASE_API_ROUTE = "https://discord.com/api/v10/";
 export const GEN_API_ROUTE = (route: string): string => (BASE_API_ROUTE + route).replace(/(?<!:)\/(?=\/)/g, '');
 
-export async function getRequest(url: string, headers: object = {}) {
-    return await ((await request(url, {
+export async function getRequest(url: string, headers: object = {}, json = true) {
+    let data = (await request(url, {
         headers: {
             "Content-Type": "application/json",
             ...headers
         }
-    })).body.json());
+    })).body;
+
+    if (json) return await data.json();
+    else return data;
 }
 
 export async function makeRequest(data: object, url: string, headers: object = {}, method: 'POST' | 'PUT' = 'POST') {
@@ -73,9 +76,44 @@ export async function addUserToGuild(access_token: string, guildId: string, user
         'PUT')
 }
 
-export async function getUserInfo(access_token: string) {
-    const url = GEN_API_ROUTE(`/users/@me`);
-    return await getRequest(url, {
-        "Authorization": `Bearer ${access_token}`
-    })
+interface UserInfo {
+    id: string,
+    username: string,
+    discriminator: string,
+    avatar: string,
+    verified: boolean,
+    email: string,
+    flags: number,
+    banner: string,
+    accent_color: number,
+    premium_type: number,
+    public_flags: number
+}
+
+const UserCache = new Map();
+
+export async function getUserInfo(access_token: string): Promise<UserInfo> {
+    if (!UserCache.has(access_token)) {
+        const url = GEN_API_ROUTE(`/users/@me`);
+
+        let data: UserInfo = await getRequest(url, {
+            "Authorization": `Bearer ${access_token}`
+        });
+
+        UserCache.set(access_token, data)
+        setTimeout(() => UserCache.delete(access_token), 1000 * 60 * 30)
+        return data;
+    } else {
+        return UserCache.get(access_token);
+    }
+}
+
+export async function getAvatar(access_token: string): Promise<string> {
+    let userInfo = await getUserInfo(access_token);
+    let userId = userInfo.id;
+    let avatarId = userInfo.avatar;
+
+    let avatar = (await (await getRequest(`https://cdn.discordapp.com/avatars/${userId}/${avatarId}.png`, {}, false)).blob())
+    console.log(avatar)
+    return avatar;
 }
