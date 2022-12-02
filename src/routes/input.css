@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+a {
+    display: block;
+    width: fit-content;
+}
+
+button {
+    margin-top: 1rem;
+}
+
+.auth-text {
+    color: green;
+    font-style: italic;
+}
+
+.re-auth {
+    color: brown;
+    display: inline;
+}
+
+.recheck {
+    color: skyblue;
+}
+
+#auth-span,
+a {
+    font-weight: 700;
+}

@@ -4,3 +4,4 @@
 /data/*
 
 config.json
+src/routes/style.css
