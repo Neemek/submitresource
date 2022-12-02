@@ -2,20 +2,21 @@
 <html lang="en">
 
 <head>
+    <link rel="stylesheet" href="/style.css">
+    <link rel="manifest" href="manifest.json">
+
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
 
     <script src="/dashboard.js" defer></script>
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 
 <body>
-    <p>Authorized status: <span id="auth-span">...</span></p>
+    <p class="text-amber-800">Authorized status: <span id="auth-span">...</span></p>
 
-    <a href="/api/oauth2/refresh?redirect=true">Refresh tokens</a>
+    <a href="javascript:void(0)" onclick="asyncRefreshTokens()">Refresh tokens</a>
     <button onclick="joinServer()">Join server with id:</button><input type="text" id="guildId"><br>
     <p id="joinserver-res">{}</p>
     <!-- <a href="/api/oauth2/joinserver">Join server</a> -->
@@ -24,12 +25,12 @@
     <p id="user-info">{}</p>
 
     <a id="authlink" target="_self" href="/api/oauth2/authurl?redirect=true">Auth URL</a>
-    <a id="authlink" target="_self" href="/api/oauth2/authurlwbot?redirect=true">Auth URL (With bot)</a>
+    <a id="authlinkwbot" target="_self" href="/api/oauth2/authurl?bot=true&redirect=true">Auth URL (With bot)</a>
 </body>
 
 </html>
 
-<style>
+<!-- <style>
     * {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
@@ -61,4 +62,4 @@
     a {
         font-weight: 700;
     }
-</style>
+</style> -->
