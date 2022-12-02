@@ -5,12 +5,14 @@
   "main": "./build/src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "nodemon src/index.ts",
+    "dev": "nodemon src/index.ts",
     "start": "pm2 start ecosystem.config.js",
+    "stop": "pm2 stop ecosystem.config.js",
     "clean": "rm build",
     "clean-win": "rmdir /s /q build",
     "build": "tsc && copy ./src/routes/** ./build/src/routes/",
-    "build-win": "tsc && copy src/routes build/src/routes",
+    "build-other": "tsc && copy src/routes build/src/routes",
+    "css-build": "npx tailwindcss -i ./src/routes/input.css -o ./src/routes/style.css --watch",
     "install-n-build": "npm install && npm run build"
   },
   "author": "",
@@ -23,5 +25,8 @@
     "express": "^4.18.2",
     "typescript": "^4.8.4",
     "undici": "^5.12.0"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.2.4"
   }
 }
