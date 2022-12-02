@@ -2,6 +2,7 @@
 /build
 
 /data/*
+/dashboard/*
 
 config.json
 src/routes/style.css
