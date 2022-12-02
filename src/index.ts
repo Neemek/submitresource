@@ -12,9 +12,8 @@ const app = express();
 
 const GEN_AUTH_URL = (bot = false) => `https://discord.com/api/oauth2/authorize?client_id=${config.clientId}&redirect_uri=${encodeURIComponent(config.redirectUrl)}&response_type=code&scope=${encodeURIComponent((config.applicationIntents.concat(bot ? ["bot"] : [])).join(' '))}${bot ? `&permissions=${config.botPermissions}` : ''}`
 
-const makeSecureCookieConfig = (secure, maxAge) => { return { httpOnly: true, secure: req.secure, maxAge: refreshTokenMaxAge } }
-
 const refreshTokenMaxAge = 1000 * 60 * 60 * 24 * 7 * 2; // two weeks
+const makeSecureCookieConfig = (secure, maxAge=refreshTokenMaxAge) => { return { httpOnly: true, secure: secure, maxAge: maxAge } }
 
 app.use(cookies())
 app.use(json())
@@ -32,7 +31,7 @@ app.get('/api/oauth2/exchange', async (req, res) => {
     let codeRes = await exchangeCode(code.toString());
     res.cookie(Cookies.Refresh,
         codeRes['refresh_token'],
-        makeSecureCookieConfig(req.secure, refreshTokenMaxAge));
+        makeSecureCookieConfig(req.secure));
 
     res.cookie(Cookies.Access,
         codeRes['access_token'],
@@ -53,7 +52,7 @@ app.get('/api/oauth2/refresh', async (req, res) => {
     let aT = await getAccessToken(refreshToken);
     res.cookie(Cookies.Refresh,
         aT['refresh_token'],
-        makeSecureCookieConfig(req.secure, refreshTokenMaxAge));
+        makeSecureCookieConfig(req.secure));
 
     res.cookie(Cookies.Access,
         aT['access_token'],
