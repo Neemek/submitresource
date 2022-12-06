@@ -1,8 +1,0 @@
-{
-	"clientId": "client id here",
-	"clientSecret": "client secret here",
-	"port": 53134,
-	"botToken": "bot token here",
-	"authUrl": "auth url here",
-	"authUrlwBot": "auth url with bot here" 
-}

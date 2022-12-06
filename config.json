@@ -1,0 +1,12 @@
+{
+	"clientId": "CLIENT_ID_HERE",
+	"clientSecret": "CLIENT_SECRET_HERE",
+	"port": 53134,
+	"redirectUrl": "http://localhost:53134/api/oauth2/exchange",
+	"applicationIntents": [
+		"guilds",
+		"identify"
+	],
+	"authUrl": "AUTH_URL_HERE",
+	"authUrlwBot": "AUTH_URL_WITH_BOT_HERE" 
+}

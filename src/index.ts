@@ -1,4 +1,4 @@
-import { addUserToGuild, exchangeCode, getAccessToken, getAvatar, getUserInfo } from "./util/discord";
+import { exchangeCode, refreshTokens, getUserInfo, getRequest, isInGuild, makeRequest, GEN_API_ROUTE } from "./util/discord";
 import config from '../config.json';
 import { urlencoded, json } from "body-parser";
 import cookies from 'cookie-parser'
@@ -10,10 +10,10 @@ const app = express();
 
 // ***REMOVED***
 
-const GEN_AUTH_URL = (bot = false) => `https://discord.com/api/oauth2/authorize?client_id=${config.clientId}&redirect_uri=${encodeURIComponent(config.redirectUrl)}&response_type=code&scope=${encodeURIComponent((config.applicationIntents.concat(bot ? ["bot"] : [])).join(' '))}${bot ? `&permissions=${config.botPermissions}` : ''}`
+const GEN_AUTH_URL = () => `https://discord.com/api/oauth2/authorize?client_id=${config.clientId}&redirect_uri=${encodeURIComponent(config.redirectUrl)}&response_type=code&scope=${encodeURIComponent((config.applicationIntents).join(' '))}`
 
 const refreshTokenMaxAge = 1000 * 60 * 60 * 24 * 7 * 2; // two weeks
-const makeSecureCookieConfig = (secure, maxAge=refreshTokenMaxAge) => { return { httpOnly: true, secure: secure, maxAge: maxAge } }
+const makeSecureCookieConfig = (secure, maxAge = refreshTokenMaxAge) => { return { httpOnly: true, secure: secure, maxAge: maxAge } }
 
 app.use(cookies())
 app.use(json())
@@ -41,7 +41,7 @@ app.get('/api/oauth2/exchange', async (req, res) => {
 });
 
 app.get('/api/oauth2/refresh', async (req, res) => {
-    let fromBrowser = req.query['redirect'] != undefined;
+    let fromBrowser = !req.query['redirect'];
     const redirectURL = req.query['redirect-url'];
     const refreshToken = req.cookies[Cookies.Refresh];
     if (!refreshToken) {
@@ -49,7 +49,7 @@ app.get('/api/oauth2/refresh', async (req, res) => {
         else return res.status(401);
     };
 
-    let aT = await getAccessToken(refreshToken);
+    let aT = await refreshTokens(refreshToken);
     res.cookie(Cookies.Refresh,
         aT['refresh_token'],
         makeSecureCookieConfig(req.secure));
@@ -76,25 +76,6 @@ app.get('/api/oauth2/user', async (req, res) => {
     if (redirectURL) res.redirect(redirectURL.toString());
 });
 
-app.get('/api/oauth2/joinserver', async (req, res) => {
-    const redirectURL = req.query['redirect-uri']
-    const accessToken = req.cookies[Cookies.Access];
-    if (!accessToken) return res.send('no access token') && res.status(401);
-
-    const guildId = req.query['guild-id'];
-    if (!guildId) return res.status(400);
-
-    try {
-        let response = await addUserToGuild(accessToken, guildId.toString(), (await getUserInfo(accessToken)).id);
-        res.json(response);
-    } catch {
-        res.json({ error: 'invalid guild id' })
-        res.status(400)
-    } finally {
-        if (redirectURL) res.redirect(redirectURL.toString());
-    }
-});
-
 app.get('/api/oauth2/hasauthorized', (req, res) => {
     const refreshToken = req.cookies[Cookies.Refresh];
     const accessToken = req.cookies[Cookies.Access];
@@ -104,63 +85,50 @@ app.get('/api/oauth2/hasauthorized', (req, res) => {
     res.end()
 });
 
-app.get('/api/purchases/get', (req, res) => {
-    const accessToken = req.cookies[Cookies.Access];
-    if (!accessToken) return res.status(401);
-
-});
-
 app.get('/api/oauth2/authurl', (req, res) => {
-    let authUrl = GEN_AUTH_URL(req.query['bot']?.toString() == 'true');
+    let authUrl = GEN_AUTH_URL();
 
-    if (req.query['redirect'] == 'true') res.redirect(authUrl)
-    else res.send(authUrl)
+    res.send(authUrl)
     res.end()
 });
 
-app.get('/api/user/mypfp', async (req, res) => {
+app.post('/api/submitresource', async (req, res) => {
     const accessToken = req.cookies[Cookies.Access];
+    let url = req.query['resource'].toString();
+    url = "https://"+(url.replace(/http?s\:\/\//g, ''));
     if (!accessToken) return res.send('no access token') && res.status(401);
 
-    let avatar = getAvatar(accessToken);
+    if (!isInGuild(accessToken, 'GUILD_ID_HERE')) return res.send('not in guild') && res.status(401);
 
-    res.type('png')
-    res.send(avatar)
-});
+    getRequest(url).then(async ({ statusCode }) => {
+        console.log(statusCode)
 
-app.post('/**', async (req, res) => {
-    console.log(JSON.stringify(req.body))
+        if (statusCode >= 200 && statusCode < 400) {
+            let info = await getUserInfo(accessToken);
+            console.log(info)
+            makeRequest({
+                content: url,
+                username: info.username,
+                avatar_url: `https://cdn.discordapp.com/avatars/${info.id}/${info.avatar}.png`
+            }, "TARGET_WEBHOOK_HERE")
+
+            res.status(201);
+        } else res.status(400);
+        res.end();
+    });
+
 });
 
 app.get('/', async (req, res) => {
+    if (!req.cookies[Cookies.Refresh]) return res.redirect(GEN_AUTH_URL());
+
     res.sendFile(path.join(__dirname, "/routes/index.html"))
 });
 
-app.get('/**', (req, res) => {
-    let url = path.join(__dirname, "/routes/", req.url);
-    let url_html = path.join(__dirname, "/routes/", req.url + ".html");
-
-    res.type('text/html')
-    if (fs.existsSync(url)) {
-        let data = fs.readFileSync(url);
-        res.send(data.toString());
-        res.status(200)
-    } else {
-        if (fs.existsSync(url_html)) {
-            let html = fs.readFileSync(url_html).toString();
-            res.type(".html");
-            res.send(html);
-            res.status(200)
-        }
-        else {
-            let notfound = fs.readFileSync(path.join(__dirname, "/routes/404.html"))
-            res.type('.html');
-            res.send(notfound);
-            res.status(404)
-        };
-    }
-
-    return;
-})
+app.get('/**', async (req, res) => {
+    if (req.url == '/') return;
+    res.status(308)
+    res.redirect('/')
+});
 
 app.listen(config.port, () => console.log('Webserver started on port: ' + config.port));
