@@ -88,7 +88,7 @@ export async function getUserInfo(access_token: string): Promise<UserInfo> {
 
         let data: UserInfo = await (await getRequest(url, {
             "Authorization": `Bearer ${access_token}`
-        })).body.json();
+        })).body.json() as UserInfo;
 
         UserCache.set(access_token, data)
         setTimeout(() => UserCache.delete(access_token), 1000 * 60 * 2.5)
@@ -110,7 +110,7 @@ interface GuildPartial {
 export async function isInGuild(access_token: string, guildId: string) {
     let data: GuildPartial[] = await (await getRequest(GEN_API_ROUTE('/users/@me/guilds'), {
         "Authorization": `Bearer ${access_token}`
-    })).body.json()
+    })).body.json() as GuildPartial[]
 
     return data.some(part => part.id === guildId)
 }
