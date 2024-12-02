@@ -8,5 +8,7 @@
 		"identify"
 	],
 	"authUrl": "AUTH_URL_HERE",
-	"authUrlwBot": "AUTH_URL_WITH_BOT_HERE" 
+	"authUrlwBot": "AUTH_URL_WITH_BOT_HERE",
+	"guildId": "GUILD_ID_HERE",
+	"targetWebhook": "TARGET_WEBHOOK_HERE"
 }

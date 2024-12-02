@@ -1,14 +1,11 @@
-import { exchangeCode, refreshTokens, getUserInfo, getRequest, isInGuild, makeRequest, GEN_API_ROUTE } from "./util/discord";
+import { exchangeCode, refreshTokens, getUserInfo, getRequest, isInGuild, makeRequest } from "./util/discord";
 import config from '../config.json';
 import { urlencoded, json } from "body-parser";
 import cookies from 'cookie-parser'
-import fs from 'fs'
 import path from 'path'
 
 import express from 'express';
 const app = express();
-
-// ***REMOVED***
 
 const GEN_AUTH_URL = () => `https://discord.com/api/oauth2/authorize?client_id=${config.clientId}&redirect_uri=${encodeURIComponent(config.redirectUrl)}&response_type=code&scope=${encodeURIComponent((config.applicationIntents).join(' '))}`
 
@@ -98,7 +95,7 @@ app.post('/api/submitresource', async (req, res) => {
     url = "https://"+(url.replace(/http?s\:\/\//g, ''));
     if (!accessToken) return res.send('no access token') && res.status(401);
 
-    if (!isInGuild(accessToken, 'GUILD_ID_HERE')) return res.send('not in guild') && res.status(401);
+    if (!isInGuild(accessToken, config.guildId)) return res.send('not in guild') && res.status(401);
 
     getRequest(url).then(async ({ statusCode }) => {
         console.log(statusCode)
@@ -110,7 +107,7 @@ app.post('/api/submitresource', async (req, res) => {
                 content: url,
                 username: info.username,
                 avatar_url: `https://cdn.discordapp.com/avatars/${info.id}/${info.avatar}.png`
-            }, "TARGET_WEBHOOK_HERE")
+            }, config.targetWebhook)
 
             res.status(201);
         } else res.status(400);

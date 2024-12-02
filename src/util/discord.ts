@@ -1,5 +1,4 @@
 import { Dispatcher, request } from 'undici';
-import BodyReadable from 'undici/types/readable';
 import config from '../../config.json'
 
 export const BASE_API_ROUTE = "https://discord.com/api/v10/";
